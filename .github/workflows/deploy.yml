@@ -33,6 +33,7 @@ jobs:
       - name: Build
         env:
           SITE_URL: ${{ vars.SITE_URL }}
+          BASE_PATH: /land-plots-site/
           PUBLIC_FORM_ENDPOINT: ${{ vars.PUBLIC_FORM_ENDPOINT }}
           PUBLIC_YANDEX_METRIKA_ID: ${{ vars.PUBLIC_YANDEX_METRIKA_ID }}
         run: npm run build
