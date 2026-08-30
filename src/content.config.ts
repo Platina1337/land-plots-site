@@ -1,7 +1,9 @@
-import { defineCollection, z } from "astro:content";
+import { defineCollection } from "astro:content";
+import { glob } from "astro/loaders";
+import { z } from "astro/zod";
 
 const plots = defineCollection({
-  type: "content",
+  loader: glob({ pattern: "**/[^_]*.{md,mdx}", base: "./src/content/plots" }),
   schema: z.object({
     id: z.string(),
     title: z.string(),
@@ -29,7 +31,12 @@ const plots = defineCollection({
         sewer: z.boolean().default(false),
         road: z.string().optional(),
       })
-      .default({}),
+      .default({
+        electricity: false,
+        gas: false,
+        water: false,
+        sewer: false,
+      }),
     distance: z
       .object({
         toCityKm: z.number().optional(),

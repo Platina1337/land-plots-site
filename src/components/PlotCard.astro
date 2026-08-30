@@ -1,0 +1,211 @@
+---
+interface Props {
+  plot: {
+    id: string;
+    data: {
+      id: string;
+      title: string;
+      status: "available" | "reserved" | "sold";
+      settlement?: string;
+      district?: string;
+      areaSotka?: number;
+      areaHa: number;
+      priceRub?: number;
+      landCategory: "izhs" | "agricultural" | "other";
+      gallery: string[];
+      features: string[];
+    };
+  };
+}
+
+const { plot } = Astro.props;
+const statusLabels = {
+  available: "В продаже",
+  reserved: "Забронирован",
+  sold: "Продан",
+};
+const categoryLabels = {
+  izhs: "ИЖС",
+  agricultural: "Сельхозназначение",
+  other: "Другая категория",
+};
+const area = plot.data.areaSotka
+  ? `${plot.data.areaSotka} соток`
+  : `${plot.data.areaHa.toLocaleString("ru-RU")} га`;
+const price = plot.data.priceRub
+  ? `${plot.data.priceRub.toLocaleString("ru-RU")} ₽`
+  : "Цена по запросу";
+---
+
+<article
+  class="plot-card"
+  data-plot-card
+  data-status={plot.data.status}
+  data-district={plot.data.district ?? ""}
+  data-area={plot.data.areaSotka ?? plot.data.areaHa * 100}
+>
+  <a class="plot-image" href={`/plots/${plot.id}`} tabindex="-1" aria-hidden="true">
+    {plot.data.gallery[0] ? (
+      <img src={plot.data.gallery[0]} alt="" loading="lazy" />
+    ) : (
+      <span class="image-placeholder">
+        <svg viewBox="0 0 320 200" preserveAspectRatio="none">
+          <path d="M0 150c55-35 105-24 153-54 58-35 98-12 167-56v160H0Z" fill="#a7bda8" />
+          <path d="M0 176c70-30 120-12 182-42 50-24 95-20 138-28v94H0Z" fill="#6f947b" />
+          <path d="m226 86 22-40 26 40h-13v32h-24V86h-11Z" fill="#fffdf8" opacity=".9" />
+        </svg>
+      </span>
+    )}
+    <span class:list={["plot-status", plot.data.status]}>{statusLabels[plot.data.status]}</span>
+  </a>
+  <div class="plot-body">
+    <div class="plot-meta">
+      <span>№ {plot.data.id}</span>
+      <span>{categoryLabels[plot.data.landCategory]}</span>
+    </div>
+    <h3><a href={`/plots/${plot.id}`}>{plot.data.title}</a></h3>
+    <p>{[plot.data.settlement, plot.data.district].filter(Boolean).join(", ")}</p>
+    <div class="plot-stats">
+      <span><strong>{area}</strong><small>площадь</small></span>
+      <span><strong>{price}</strong><small>стоимость</small></span>
+    </div>
+    <a class="plot-link" href={`/plots/${plot.id}`}>
+      Подробнее
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+      </svg>
+    </a>
+  </div>
+</article>
+
+<style>
+  .plot-card {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper);
+    transition: box-shadow 0.25s, border-color 0.25s;
+  }
+
+  .plot-card:hover {
+    border-color: #b6c5b8;
+    box-shadow: var(--shadow);
+  }
+
+  .plot-image {
+    position: relative;
+    height: 230px;
+    display: block;
+    overflow: hidden;
+    background: #dfe8de;
+  }
+
+  .plot-image img,
+  .image-placeholder,
+  .image-placeholder svg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .plot-image img {
+    transition: transform 0.4s ease;
+  }
+
+  .plot-card:hover .plot-image img {
+    transform: scale(1.025);
+  }
+
+  .plot-status {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: white;
+    color: var(--forest);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .plot-status.reserved {
+    color: #8a5d17;
+  }
+
+  .plot-status.sold {
+    color: #6c6c6c;
+  }
+
+  .plot-body {
+    padding: 22px;
+  }
+
+  .plot-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin: 10px 0 6px;
+    font-family: "Prata", serif;
+    font-size: 22px;
+    font-weight: 400;
+  }
+
+  h3 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .plot-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 22px 0;
+    padding: 18px 0;
+    border-block: 1px solid var(--line);
+  }
+
+  .plot-stats span {
+    display: grid;
+  }
+
+  .plot-stats strong {
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  .plot-stats small {
+    color: var(--muted);
+  }
+
+  .plot-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--forest);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .plot-link svg {
+    width: 17px;
+    transition: transform 0.2s;
+  }
+
+  .plot-link:hover svg {
+    transform: translateX(3px);
+  }
+</style>

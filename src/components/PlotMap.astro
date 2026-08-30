@@ -1,0 +1,161 @@
+---
+import "leaflet/dist/leaflet.css";
+
+interface PlotMarker {
+  id: string;
+  title: string;
+  coordinates?: { lat: number; lng: number };
+  areaSotka?: number;
+  status: "available" | "reserved" | "sold";
+}
+
+interface Props {
+  plots: PlotMarker[];
+  center: { lat: number; lng: number; zoom: number };
+}
+
+const { plots, center } = Astro.props;
+const markers = plots.filter((plot) => plot.coordinates);
+---
+
+<div
+  class="map-shell"
+  data-plot-map
+  data-markers={JSON.stringify(markers)}
+  data-center={JSON.stringify(center)}
+>
+  <div class="map-canvas" data-map-canvas aria-label="Карта земельных участков"></div>
+  {markers.length === 0 && (
+    <div class="map-empty">
+      <span class="map-empty-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 21s7-5.7 7-12A7 7 0 1 0 5 9c0 6.3 7 12 7 12Z" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <circle cx="12" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8" />
+        </svg>
+      </span>
+      <strong>Точки появятся после добавления участков</strong>
+      <span>Карта уже подключена и готова к данным.</span>
+    </div>
+  )}
+</div>
+
+<script>
+  import L from "leaflet";
+
+  document.querySelectorAll<HTMLElement>("[data-plot-map]").forEach((shell) => {
+    const canvas = shell.querySelector<HTMLElement>("[data-map-canvas]");
+    if (!canvas || canvas.dataset.initialized) return;
+
+    const center = JSON.parse(shell.dataset.center ?? "{}");
+    const markers = JSON.parse(shell.dataset.markers ?? "[]");
+    const map = L.map(canvas, { scrollWheelZoom: false }).setView(
+      [center.lat, center.lng],
+      center.zoom,
+    );
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
+
+    const bounds: L.LatLngTuple[] = [];
+    markers.forEach((plot: {
+      id: string;
+      title: string;
+      areaSotka?: number;
+      coordinates: { lat: number; lng: number };
+    }) => {
+      const point: L.LatLngTuple = [plot.coordinates.lat, plot.coordinates.lng];
+      bounds.push(point);
+      L.circleMarker(point, {
+        radius: 10,
+        color: "#fffdf8",
+        weight: 3,
+        fillColor: "#173f35",
+        fillOpacity: 1,
+      })
+        .addTo(map)
+        .bindPopup(
+          `<strong>${plot.title}</strong><br>${plot.areaSotka ? `${plot.areaSotka} соток` : "Площадь по запросу"}<br><a href="/plots/${plot.id}">Подробнее</a>`,
+        );
+    });
+
+    if (bounds.length > 1) map.fitBounds(bounds, { padding: [50, 50] });
+    canvas.dataset.initialized = "true";
+  });
+</script>
+
+<style>
+  .map-shell {
+    position: relative;
+    min-height: 500px;
+    overflow: hidden;
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+  }
+
+  .map-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #dfe8de;
+  }
+
+  .map-empty {
+    position: absolute;
+    left: 28px;
+    bottom: 28px;
+    z-index: 2;
+    width: min(360px, calc(100% - 56px));
+    display: grid;
+    gap: 5px;
+    padding: 22px;
+    border: 1px solid rgba(23, 63, 53, 0.12);
+    border-radius: 18px;
+    background: rgba(255, 253, 248, 0.94);
+    box-shadow: 0 10px 34px rgba(23, 63, 53, 0.16);
+    backdrop-filter: blur(10px);
+  }
+
+  .map-empty-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 6px;
+    border-radius: 50%;
+    background: #dfeade;
+    color: var(--forest);
+  }
+
+  .map-empty-icon svg {
+    width: 22px;
+  }
+
+  .map-empty strong {
+    color: var(--ink);
+  }
+
+  .map-empty span:last-child {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  :global(.leaflet-control-attribution) {
+    font-size: 10px;
+  }
+
+  @media (max-width: 720px) {
+    .map-shell {
+      min-height: 420px;
+      border-radius: 20px;
+    }
+
+    .map-empty {
+      left: 16px;
+      bottom: 16px;
+      width: calc(100% - 32px);
+      padding: 18px;
+    }
+  }
+</style>

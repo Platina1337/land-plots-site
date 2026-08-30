@@ -1,61 +1,1211 @@
 ---
+import { getCollection } from "astro:content";
+import ContactForm from "../components/ContactForm.astro";
+import PlotCard from "../components/PlotCard.astro";
+import PlotMap from "../components/PlotMap.astro";
 import Layout from "../layouts/Layout.astro";
+import { advantages, faqs, infrastructure, site } from "../data/site";
+
+const plots = (await getCollection("plots", ({ data }) => data.published)).sort(
+  (a, b) => a.data.sortOrder - b.data.sortOrder,
+);
+const districts = [...new Set(plots.map((plot) => plot.data.district).filter(Boolean))];
+const availableCount = plots.filter((plot) => plot.data.status === "available").length;
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "RealEstateAgent",
+  name: site.name,
+  description: site.description,
+  telephone: site.phone,
+  email: site.email,
+  areaServed: "Тверская область",
+};
 ---
 
-<Layout
-  title="Земельные участки — главная"
-  description="Информационный сайт о продаже земельных участков"
->
-  <section id="hero">
-    <h1>Земельные участки</h1>
-    <p>
-      Одностраничный информационный сайт для презентации земельных участков.
-      Участки будут добавлены позже — структура данных и план проекта уже готовы.
-    </p>
-    <a href="#plots">Смотреть участки</a>
+<Layout title={`${site.name} — земельные участки в Тверской области`}>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+  </Fragment>
+
+  <section class="hero">
+    <div class="hero-art" aria-hidden="true">
+      <div class="sun"></div>
+      <div class="hill hill-back"></div>
+      <div class="hill hill-front"></div>
+      <svg class="hero-lines" viewBox="0 0 900 540" preserveAspectRatio="none">
+        <path d="M-80 450C170 340 278 470 478 333 628 230 800 286 995 166" />
+        <path d="M-70 505C140 412 285 532 527 389 660 310 792 331 990 230" />
+      </svg>
+    </div>
+    <div class="container hero-content">
+      <p class="eyebrow">Тверская область · участки от собственника</p>
+      <h1>Место, где начинается <em>ваша история</em></h1>
+      <p class="hero-copy">
+        Подберём землю для дома, отдыха или инвестиций. Проверим документы,
+        покажем участок и спокойно проведём через сделку.
+      </p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#plots">
+          Смотреть участки
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 7 7-7 7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+        </a>
+        <button class="button button-secondary" type="button" data-open-modal>Записаться на просмотр</button>
+      </div>
+      <div class="hero-note">
+        <span class="hero-note-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.7 7-12A7 7 0 1 0 5 9c0 6.3 7 12 7 12Z" fill="none" stroke="currentColor" stroke-width="1.8" /><circle cx="12" cy="9" r="2.3" fill="currentColor" /></svg>
+        </span>
+        <span><strong>Выезд на место</strong><small>Покажем дорогу и границы участка</small></span>
+      </div>
+    </div>
   </section>
 
-  <section id="plots">
-    <h2>Участки</h2>
-    <p>Пока нет опубликованных участков. Добавьте файлы в <code>src/content/plots/</code>.</p>
+  <section class="trust-strip" aria-label="Ключевые показатели">
+    <div class="container trust-grid">
+      {infrastructure.map((item) => (
+        <div><strong>{item.value}</strong><span>{item.label}</span></div>
+      ))}
+    </div>
   </section>
 
-  <section id="about">
-    <h2>О проекте</h2>
-    <p>
-      Подробный план содержимого, данных и этапов разработки — в файле
-      <code>PROJECT_PLAN.md</code>.
-    </p>
+  <section class="section about" id="about">
+    <div class="container">
+      <div class="section-heading split-heading">
+        <div>
+          <p class="eyebrow">Почему с нами спокойно</p>
+          <h2>Земля без <em>неприятных сюрпризов</em></h2>
+        </div>
+        <p>
+          Мы собрали важную информацию в одном месте: статус, площадь,
+          коммуникации, документы и точку на карте. Никаких обещаний мелким шрифтом.
+        </p>
+      </div>
+      <div class="advantage-grid">
+        {advantages.map((item, index) => (
+          <article class="advantage-card">
+            <span class="advantage-icon" aria-hidden="true">
+              {index === 0 && <svg viewBox="0 0 24 24"><path d="M12 3 4.8 6v5.1c0 4.5 3 8.6 7.2 9.9 4.2-1.3 7.2-5.4 7.2-9.9V6L12 3Z" fill="none" stroke="currentColor" stroke-width="1.7" /><path d="m8.8 11.8 2.1 2.1 4.5-4.6" fill="none" stroke="currentColor" stroke-width="1.7" /></svg>}
+              {index === 1 && <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.7" /><path d="M8 9h8M8 12h5" stroke="currentColor" stroke-linecap="round" stroke-width="1.7" /></svg>}
+              {index === 2 && <svg viewBox="0 0 24 24"><path d="M12 21s7-5.7 7-12A7 7 0 1 0 5 9c0 6.3 7 12 7 12Z" fill="none" stroke="currentColor" stroke-width="1.7" /><circle cx="12" cy="9" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7" /></svg>}
+              {index === 3 && <svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7V3Z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.7" /><path d="M15 3v5h4M10 12h6M10 16h6" stroke="currentColor" stroke-linecap="round" stroke-width="1.7" /></svg>}
+            </span>
+            <span class="card-number">0{index + 1}</span>
+            <h3>{item.title}</h3>
+            <p>{item.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
   </section>
 
-  <section id="contacts">
-    <h2>Контакты</h2>
-    <p>Телефон, email и форма заявки будут добавлены на следующем этапе.</p>
+  <section class="section plots-section" id="plots">
+    <div class="container">
+      <div class="section-heading catalogue-heading">
+        <div>
+          <p class="eyebrow">Каталог</p>
+          <h2>Найдите <em>свой участок</em></h2>
+        </div>
+        <p class="catalogue-count">
+          <strong>{availableCount}</strong>
+          <span>{availableCount === 1 ? "участок в продаже" : "участков в продаже"}</span>
+        </p>
+      </div>
+
+      {plots.length > 0 ? (
+        <>
+          <div class="filters" data-filters>
+            <label>
+              <span>Статус</span>
+              <select data-filter-status>
+                <option value="">Все статусы</option>
+                <option value="available">В продаже</option>
+                <option value="reserved">Забронированные</option>
+                <option value="sold">Проданные</option>
+              </select>
+            </label>
+            <label>
+              <span>Район</span>
+              <select data-filter-district>
+                <option value="">Все районы</option>
+                {districts.map((district) => <option value={district}>{district}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>Площадь</span>
+              <select data-filter-area>
+                <option value="">Любая площадь</option>
+                <option value="small">До 15 соток</option>
+                <option value="medium">15–50 соток</option>
+                <option value="large">Более 50 соток</option>
+              </select>
+            </label>
+            <button class="filter-reset" type="button" data-filter-reset>Сбросить</button>
+          </div>
+          <div class="plots-grid" data-plots-grid>
+            {plots.map((plot) => <PlotCard plot={plot} />)}
+          </div>
+          <p class="filter-empty" data-filter-empty hidden>По выбранным параметрам участков нет.</p>
+        </>
+      ) : (
+        <div class="catalogue-empty">
+          <div class="empty-illustration" aria-hidden="true">
+            <svg viewBox="0 0 420 240">
+              <path d="M0 176c83-42 138-17 210-58 73-42 133-18 210-63v185H0V176Z" fill="#dbe7d9" />
+              <path d="M0 210c96-34 156-4 244-43 65-29 123-20 176-42v115H0v-30Z" fill="#a7bda8" />
+              <path d="m278 113 34-62 40 62h-19v48h-38v-48h-17Z" fill="#fffdf8" />
+              <path d="M23 216c78-54 158-41 250-87" fill="none" stroke="#fffdf8" stroke-width="4" stroke-dasharray="10 9" />
+            </svg>
+          </div>
+          <div>
+            <span class="empty-badge">Каталог готов к наполнению</span>
+            <h3>Скоро здесь появятся участки</h3>
+            <p>
+              Мы готовим точные данные, фотографии и документы. Оставьте контакты —
+              сообщим о первых предложениях раньше публикации.
+            </p>
+            <button class="button button-primary" type="button" data-open-modal>Узнать о новых участках</button>
+          </div>
+        </div>
+      )}
+    </div>
   </section>
+
+  <section class="section map-section" id="map">
+    <div class="container">
+      <div class="section-heading split-heading">
+        <div>
+          <p class="eyebrow">Расположение</p>
+          <h2>Все предложения <em>на карте</em></h2>
+        </div>
+        <p>Изучите расположение, оцените дорогу до города и выберите удобную локацию.</p>
+      </div>
+      <PlotMap
+        plots={plots.map((plot) => ({
+          id: plot.id,
+          title: plot.data.title,
+          coordinates: plot.data.coordinates,
+          areaSotka: plot.data.areaSotka,
+          status: plot.data.status,
+        }))}
+        center={site.mapCenter}
+      />
+    </div>
+  </section>
+
+  <section class="section process-section">
+    <div class="container process-grid">
+      <div>
+        <p class="eyebrow eyebrow-light">Как проходит покупка</p>
+        <h2>Четыре понятных <em>шага</em></h2>
+        <p class="process-lead">
+          От первого звонка до регистрации права — последовательно и без спешки.
+        </p>
+      </div>
+      <ol class="process-list">
+        <li><span>01</span><div><strong>Подбираем варианты</strong><p>Уточняем цель, бюджет и важные для вас параметры.</p></div></li>
+        <li><span>02</span><div><strong>Смотрим на месте</strong><p>Показываем границы, дорогу, коммуникации и окружение.</p></div></li>
+        <li><span>03</span><div><strong>Проверяем документы</strong><p>Предоставляем данные участка и отвечаем на вопросы.</p></div></li>
+        <li><span>04</span><div><strong>Оформляем сделку</strong><p>Готовим документы и сопровождаем регистрацию.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section documents-section" id="documents">
+    <div class="container documents-grid">
+      <div class="document-visual" aria-hidden="true">
+        <div class="document-paper document-back"></div>
+        <div class="document-paper document-front">
+          <span class="document-seal">
+            <svg viewBox="0 0 24 24"><path d="m12 3 2.1 2.1 3-.1.1 3 2.2 2-2 2.2.1 3-3 .1L12 21l-2.1-2.1-3 .1-.1-3-2.2-2 2-2.2-.1-3 3-.1L12 3Z" fill="none" stroke="currentColor" stroke-width="1.4" /><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+          </span>
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+      <div>
+        <p class="eyebrow">Прозрачность</p>
+        <h2>Документы <em>до принятия решения</em></h2>
+        <p>
+          Не просим верить на слово. Для каждого опубликованного участка можно
+          проверить основные сведения и запросить полный комплект.
+        </p>
+        <ul class="check-list">
+          <li>Выписка из ЕГРН</li>
+          <li>Кадастровый номер и границы</li>
+          <li>Категория и разрешённое использование</li>
+          <li>Информация об ограничениях и обременениях</li>
+        </ul>
+        <button class="button button-secondary" type="button" data-open-modal>Запросить документы</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section faq-section" id="faq">
+    <div class="container faq-grid">
+      <div class="section-heading">
+        <p class="eyebrow">Ответы на вопросы</p>
+        <h2>Что важно знать <em>до просмотра</em></h2>
+        <p>Если ответа нет — оставьте заявку, всё спокойно объясним.</p>
+      </div>
+      <div class="faq-list">
+        {faqs.map((item, index) => (
+          <details open={index === 0}>
+            <summary>
+              <span>{item.question}</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" /></svg>
+            </summary>
+            <p>{item.answer}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section contact-section" id="contacts">
+    <div class="container contact-panel">
+      <div>
+        <p class="eyebrow eyebrow-light">Подберём участок</p>
+        <h2>Расскажите, <em>что вы ищете</em></h2>
+        <p>Перезвоним, уточним параметры и предложим подходящие варианты.</p>
+        <div class="contact-direct">
+          <span>Или позвоните нам</span>
+          <a href={site.phoneHref}>{site.phone}</a>
+          <small>{site.workHours}</small>
+        </div>
+      </div>
+      <div class="form-card">
+        <ContactForm source="Форма внизу главной" />
+      </div>
+    </div>
+  </section>
+
+  <dialog class="modal" data-modal aria-labelledby="modal-title">
+    <div class="modal-inner">
+      <button class="modal-close" type="button" aria-label="Закрыть окно" data-close-modal>
+        <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" /></svg>
+      </button>
+      <p class="eyebrow">Заявка на просмотр</p>
+      <h2 id="modal-title">Давайте найдём <em>ваш участок</em></h2>
+      <p>Оставьте контакты — перезвоним и уточним удобное время.</p>
+      <ContactForm source="Модальное окно" />
+    </div>
+  </dialog>
 </Layout>
 
 <style>
-  section {
-    margin-bottom: 3rem;
+  .section {
+    padding: 110px 0;
   }
 
-  h1 {
-    font-size: 2.25rem;
-    margin-bottom: 0.5rem;
+  h1,
+  h2 {
+    margin: 0;
+    font-family: "Prata", serif;
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
   }
 
   h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+    max-width: 720px;
+    font-size: clamp(38px, 5vw, 62px);
   }
 
-  #hero a {
-    display: inline-block;
-    margin-top: 1rem;
-    padding: 0.75rem 1.25rem;
-    background: #2d5016;
-    color: #fff;
+  em {
+    color: var(--forest-light);
+    font-style: italic;
+  }
+
+  .eyebrow {
+    margin: 0 0 18px;
+    color: var(--forest-light);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow-light {
+    color: #bed2c2;
+  }
+
+  .hero {
+    position: relative;
+    min-height: 760px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: #e8ece3;
+  }
+
+  .hero-art {
+    position: absolute;
+    inset: 0 0 0 52%;
+    overflow: hidden;
+    background: linear-gradient(145deg, #d7e2d4, #eef0e7 58%);
+  }
+
+  .hero-art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #e8ece3 0%, transparent 24%);
+  }
+
+  .sun {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    top: 11%;
+    right: 14%;
+    border-radius: 50%;
+    background: #f3c77e;
+    filter: blur(1px);
+  }
+
+  .hill {
+    position: absolute;
+    width: 125%;
+    height: 62%;
+    left: -8%;
+    bottom: -17%;
+    border-radius: 50% 55% 0 0;
+    transform: rotate(-7deg);
+  }
+
+  .hill-back {
+    bottom: -7%;
+    background: #9eb99f;
+  }
+
+  .hill-front {
+    left: 6%;
+    bottom: -31%;
+    background: #567f69;
+    transform: rotate(9deg);
+  }
+
+  .hero-lines {
+    position: absolute;
+    inset: auto 0 0;
+    width: 100%;
+    height: 70%;
+    z-index: 1;
+  }
+
+  .hero-lines path {
+    fill: none;
+    stroke: rgba(255, 253, 248, 0.72);
+    stroke-width: 2;
+    stroke-dasharray: 11 9;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    padding-block: 110px;
+  }
+
+  .hero-content h1 {
+    max-width: 720px;
+    font-size: clamp(54px, 7vw, 96px);
+  }
+
+  .hero-copy {
+    max-width: 570px;
+    margin: 28px 0 0;
+    color: var(--muted);
+    font-size: 18px;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  .hero-actions svg {
+    width: 18px;
+  }
+
+  .hero-note {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 60px;
+  }
+
+  .hero-note-icon {
+    width: 45px;
+    height: 45px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 253, 248, 0.8);
+  }
+
+  .hero-note-icon svg {
+    width: 21px;
+  }
+
+  .hero-note strong,
+  .hero-note small {
+    display: block;
+  }
+
+  .hero-note small {
+    color: var(--muted);
+  }
+
+  .trust-strip {
+    background: var(--forest);
+    color: white;
+  }
+
+  .trust-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .trust-grid > div {
+    display: grid;
+    padding: 30px 34px;
+    border-left: 1px solid rgba(255, 255, 255, 0.13);
+  }
+
+  .trust-grid > div:last-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.13);
+  }
+
+  .trust-grid strong {
+    font-family: "Prata", serif;
+    font-size: 22px;
+    font-weight: 400;
+  }
+
+  .trust-grid span {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+  }
+
+  .split-heading,
+  .catalogue-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 60px;
+    margin-bottom: 54px;
+  }
+
+  .split-heading > p {
+    max-width: 420px;
+    margin: 0 0 7px;
+    color: var(--muted);
+  }
+
+  .advantage-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .advantage-card {
+    position: relative;
+    min-height: 300px;
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper);
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+
+  .advantage-card:hover {
+    border-color: #b4c6b6;
+    box-shadow: var(--shadow);
+  }
+
+  .advantage-icon {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #e4ece1;
+    color: var(--forest);
+  }
+
+  .advantage-icon svg {
+    width: 25px;
+  }
+
+  .card-number {
+    position: absolute;
+    top: 32px;
+    right: 28px;
+    color: #a8b2ad;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  .advantage-card h3 {
+    margin: 68px 0 10px;
+    font-family: "Prata", serif;
+    font-size: 21px;
+    font-weight: 400;
+  }
+
+  .advantage-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .plots-section {
+    background: var(--paper);
+  }
+
+  .catalogue-count {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+  }
+
+  .catalogue-count strong {
+    font-family: "Prata", serif;
+    font-size: 40px;
+    font-weight: 400;
+  }
+
+  .catalogue-count span {
+    max-width: 90px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) auto;
+    gap: 12px;
+    margin-bottom: 30px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--cream);
+  }
+
+  .filters label {
+    display: grid;
+    gap: 5px;
+  }
+
+  .filters label > span {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .filters select {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 38px 0 13px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: white;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .filter-reset {
+    align-self: end;
+    height: 44px;
+    padding: 0 18px;
+    border: 0;
+    background: transparent;
+    color: var(--forest);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .plots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .filter-empty {
+    padding: 30px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    text-align: center;
+  }
+
+  .catalogue-empty {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 30px;
+    background: #e4ece1;
+  }
+
+  .empty-illustration {
+    align-self: stretch;
+    min-height: 390px;
+  }
+
+  .empty-illustration svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .catalogue-empty > div:last-child {
+    padding: 54px;
+  }
+
+  .empty-badge {
+    display: inline-flex;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--forest);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .catalogue-empty h3 {
+    margin: 22px 0 12px;
+    font-family: "Prata", serif;
+    font-size: clamp(30px, 4vw, 46px);
+    font-weight: 400;
+    line-height: 1.15;
+  }
+
+  .catalogue-empty p {
+    margin: 0 0 28px;
+    color: var(--muted);
+  }
+
+  .map-section {
+    background: #edf0e8;
+  }
+
+  .process-section {
+    background: var(--forest);
+    color: white;
+  }
+
+  .process-section h2 em {
+    color: #bed2c2;
+  }
+
+  .process-grid {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 100px;
+  }
+
+  .process-lead {
+    max-width: 430px;
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  .process-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .process-list li {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 18px;
+    padding: 25px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .process-list li:first-child {
+    padding-top: 0;
+  }
+
+  .process-list li > span {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 50%;
+    color: #bed2c2;
+    font-size: 11px;
+  }
+
+  .process-list strong {
+    font-size: 18px;
+  }
+
+  .process-list p {
+    margin: 5px 0 0;
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  .documents-section {
+    background: var(--paper);
+  }
+
+  .documents-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 90px;
+  }
+
+  .document-visual {
+    position: relative;
+    min-height: 470px;
+    border-radius: 30px;
+    background: #dfe9dc;
+  }
+
+  .document-paper {
+    position: absolute;
+    width: 48%;
+    height: 68%;
+    left: 26%;
+    top: 16%;
+    border-radius: 5px;
+    background: white;
+    box-shadow: 0 20px 55px rgba(23, 63, 53, 0.14);
+  }
+
+  .document-back {
+    transform: rotate(-8deg) translate(-25px, 8px);
+    background: #f3f0e7;
+  }
+
+  .document-front {
+    display: grid;
+    place-content: center;
+    gap: 18px;
+    padding: 45px;
+    transform: rotate(4deg);
+  }
+
+  .document-front > span:not(.document-seal) {
+    width: 100%;
+    height: 5px;
+    display: block;
+    border-radius: 5px;
+    background: #dce3dd;
+  }
+
+  .document-seal {
+    width: 70px;
+    height: 70px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+    background: #e4ece1;
+    color: var(--forest);
+  }
+
+  .document-seal svg {
+    width: 37px;
+  }
+
+  .documents-grid > div:last-child > p:not(.eyebrow) {
+    max-width: 560px;
+    color: var(--muted);
+  }
+
+  .check-list {
+    display: grid;
+    gap: 12px;
+    margin: 30px 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .check-list li {
+    position: relative;
+    padding-left: 30px;
+  }
+
+  .check-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    width: 21px;
+    height: 21px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #e4ece1;
+    color: var(--forest);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .faq-section {
+    background: #edf0e8;
+  }
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 80px;
+  }
+
+  .faq-grid .section-heading > p:last-child {
+    max-width: 420px;
+    color: var(--muted);
+  }
+
+  .faq-list details {
+    border-bottom: 1px solid #cbd4cb;
+  }
+
+  .faq-list summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 23px 0;
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .faq-list summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-list summary svg {
+    width: 23px;
+    flex: 0 0 auto;
+    transition: transform 0.2s;
+  }
+
+  .faq-list details[open] summary svg {
+    transform: rotate(45deg);
+  }
+
+  .faq-list details p {
+    max-width: 650px;
+    margin: -5px 50px 23px 0;
+    color: var(--muted);
+  }
+
+  .contact-section {
+    padding-block: 80px;
+    background: var(--cream);
+  }
+
+  .contact-panel {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    align-items: center;
+    gap: 80px;
+    padding: 68px;
+    border-radius: 30px;
+    background: var(--forest);
+    color: white;
+  }
+
+  .contact-panel h2 em {
+    color: #bed2c2;
+  }
+
+  .contact-panel > div:first-child > p:not(.eyebrow) {
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  .contact-direct {
+    display: grid;
+    margin-top: 38px;
+  }
+
+  .contact-direct span,
+  .contact-direct small {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 12px;
+  }
+
+  .contact-direct a {
+    margin: 4px 0;
+    color: white;
+    font-family: "Prata", serif;
+    font-size: 26px;
     text-decoration: none;
-    border-radius: 6px;
+  }
+
+  .form-card {
+    padding: 32px;
+    border-radius: 22px;
+    background: var(--paper);
+  }
+
+  .modal {
+    width: min(620px, calc(100% - 28px));
+    max-height: calc(100vh - 28px);
+    padding: 0;
+    border: 0;
+    border-radius: 26px;
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 30px 90px rgba(5, 25, 20, 0.35);
+  }
+
+  .modal::backdrop {
+    background: rgba(9, 30, 25, 0.72);
+    backdrop-filter: blur(5px);
+  }
+
+  .modal-inner {
+    position: relative;
+    padding: 44px;
+  }
+
+  .modal h2 {
+    font-size: 40px;
+  }
+
+  .modal-inner > p:not(.eyebrow) {
+    margin: 12px 0 28px;
+    color: var(--muted);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .modal-close svg {
+    width: 20px;
+  }
+
+  @media (max-width: 1000px) {
+    .hero {
+      min-height: 700px;
+    }
+
+    .hero-art {
+      inset: 42% 0 0 38%;
+      opacity: 0.78;
+    }
+
+    .advantage-grid,
+    .plots-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .process-grid,
+    .faq-grid {
+      gap: 50px;
+    }
+
+    .contact-panel {
+      gap: 45px;
+      padding: 50px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .section {
+      padding: 76px 0;
+    }
+
+    h2 {
+      font-size: 40px;
+    }
+
+    .hero {
+      min-height: 760px;
+      align-items: flex-start;
+    }
+
+    .hero-art {
+      inset: 52% -35% 0 5%;
+    }
+
+    .hero-content {
+      padding-block: 82px;
+    }
+
+    .hero-content h1 {
+      font-size: 52px;
+    }
+
+    .hero-copy {
+      font-size: 16px;
+    }
+
+    .hero-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .hero-actions .button {
+      width: 100%;
+    }
+
+    .hero-note {
+      margin-top: 38px;
+    }
+
+    .trust-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .trust-grid > div,
+    .trust-grid > div:last-child {
+      padding: 22px 18px;
+      border-right: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .split-heading,
+    .catalogue-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 22px;
+      margin-bottom: 38px;
+    }
+
+    .advantage-grid,
+    .plots-grid,
+    .catalogue-empty,
+    .process-grid,
+    .documents-grid,
+    .faq-grid,
+    .contact-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .advantage-card {
+      min-height: 260px;
+    }
+
+    .filters {
+      grid-template-columns: 1fr;
+    }
+
+    .catalogue-empty > div:last-child {
+      padding: 30px;
+    }
+
+    .empty-illustration {
+      min-height: 260px;
+    }
+
+    .process-grid,
+    .documents-grid,
+    .faq-grid {
+      gap: 48px;
+    }
+
+    .document-visual {
+      min-height: 360px;
+    }
+
+    .contact-panel {
+      gap: 38px;
+      padding: 34px 22px;
+      border-radius: 22px;
+    }
+
+    .form-card {
+      padding: 22px 18px;
+    }
+
+    .modal-inner {
+      padding: 42px 22px 26px;
+    }
+
+    .modal h2 {
+      font-size: 34px;
+    }
+  }
+
+  @media (max-width: 430px) {
+    .hero-content h1 {
+      font-size: 45px;
+    }
+
+    .advantage-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
+
+<script>
+  const modal = document.querySelector<HTMLDialogElement>("[data-modal]");
+  const openModal = () => {
+    modal?.showModal();
+    document.body.classList.add("modal-open");
+  };
+  const closeModal = () => {
+    modal?.close();
+    document.body.classList.remove("modal-open");
+  };
+
+  document.querySelectorAll("[data-open-modal]").forEach((button) =>
+    button.addEventListener("click", openModal),
+  );
+  document.querySelector("[data-close-modal]")?.addEventListener("click", closeModal);
+  modal?.addEventListener("click", (event) => {
+    if (event.target === modal) closeModal();
+  });
+  modal?.addEventListener("close", () => document.body.classList.remove("modal-open"));
+
+  const status = document.querySelector<HTMLSelectElement>("[data-filter-status]");
+  const district = document.querySelector<HTMLSelectElement>("[data-filter-district]");
+  const area = document.querySelector<HTMLSelectElement>("[data-filter-area]");
+  const cards = [...document.querySelectorAll<HTMLElement>("[data-plot-card]")];
+  const empty = document.querySelector<HTMLElement>("[data-filter-empty]");
+
+  const applyFilters = () => {
+    let visible = 0;
+    cards.forEach((card) => {
+      const areaValue = Number(card.dataset.area);
+      const areaMatches =
+        !area?.value ||
+        (area.value === "small" && areaValue < 15) ||
+        (area.value === "medium" && areaValue >= 15 && areaValue <= 50) ||
+        (area.value === "large" && areaValue > 50);
+      const matches =
+        (!status?.value || card.dataset.status === status.value) &&
+        (!district?.value || card.dataset.district === district.value) &&
+        areaMatches;
+      card.hidden = !matches;
+      if (matches) visible += 1;
+    });
+    if (empty) empty.hidden = visible > 0;
+  };
+
+  [status, district, area].forEach((select) => select?.addEventListener("change", applyFilters));
+  document.querySelector("[data-filter-reset]")?.addEventListener("click", () => {
+    [status, district, area].forEach((select) => {
+      if (select) select.value = "";
+    });
+    applyFilters();
+  });
+</script>

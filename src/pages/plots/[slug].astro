@@ -1,0 +1,419 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import ContactForm from "../../components/ContactForm.astro";
+import PlotMap from "../../components/PlotMap.astro";
+import Layout from "../../layouts/Layout.astro";
+import { site } from "../../data/site";
+
+export async function getStaticPaths() {
+  const plots = await getCollection("plots", ({ data }) => data.published);
+  return plots.map((plot) => ({
+    params: { slug: plot.id },
+    props: { plot },
+  }));
+}
+
+interface Props {
+  plot: CollectionEntry<"plots">;
+}
+
+const { plot } = Astro.props;
+const { Content } = await render(plot);
+const data = plot.data;
+const area = data.areaSotka ? `${data.areaSotka} соток` : `${data.areaHa} га`;
+const price = data.priceRub ? `${data.priceRub.toLocaleString("ru-RU")} ₽` : "По запросу";
+const statusLabels = { available: "В продаже", reserved: "Забронирован", sold: "Продан" };
+const categoryLabels = { izhs: "ИЖС", agricultural: "Сельхозназначение", other: "Другая" };
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: data.title,
+  description: `Земельный участок ${area}, ${data.region}`,
+  sku: data.id,
+  offers: data.priceRub
+    ? {
+        "@type": "Offer",
+        priceCurrency: "RUB",
+        price: data.priceRub,
+        availability:
+          data.status === "sold" ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+      }
+    : undefined,
+};
+---
+
+<Layout
+  title={`${data.title} — ${site.name}`}
+  description={`Земельный участок ${area}, ${[data.settlement, data.district, data.region].filter(Boolean).join(", ")}.`}
+  image={data.gallery[0]}
+>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+  </Fragment>
+
+  <section class="plot-hero">
+    <div class="container">
+      <nav class="breadcrumbs" aria-label="Хлебные крошки">
+        <a href="/">Главная</a><span>/</span><a href="/#plots">Участки</a><span>/</span><span>{data.title}</span>
+      </nav>
+      <div class="plot-heading">
+        <div>
+          <span class:list={["status", data.status]}>{statusLabels[data.status]}</span>
+          <h1>{data.title}</h1>
+          <p>{[data.settlement, data.district, data.region].filter(Boolean).join(", ")}</p>
+        </div>
+        <div class="price"><small>Стоимость</small><strong>{price}</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <div class="container">
+      {data.gallery.length > 0 ? (
+        <div class="gallery">
+          {data.gallery.slice(0, 5).map((image, index) => (
+            <img src={image} alt={`${data.title}, фотография ${index + 1}`} loading={index ? "lazy" : "eager"} />
+          ))}
+        </div>
+      ) : (
+        <div class="gallery-placeholder">
+          <svg viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
+            <rect width="1000" height="420" fill="#e7ece3" />
+            <circle cx="760" cy="95" r="62" fill="#efc67f" />
+            <path d="M0 300c150-90 287-42 432-126 160-93 322-15 568-124v370H0V300Z" fill="#aec3aa" />
+            <path d="M0 359c219-83 351 17 562-93 170-89 284-16 438-74v228H0v-61Z" fill="#62856f" />
+          </svg>
+          <span>Фотографии участка готовятся</span>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container details-grid">
+      <div>
+        <p class="eyebrow">Характеристики</p>
+        <h2>Главное об участке</h2>
+        <dl class="specs">
+          <div><dt>Площадь</dt><dd>{area}</dd></div>
+          <div><dt>Категория</dt><dd>{categoryLabels[data.landCategory]}</dd></div>
+          <div><dt>Кадастровый номер</dt><dd>{data.cadastralNumber ?? "По запросу"}</dd></div>
+          <div><dt>Статус</dt><dd>{statusLabels[data.status]}</dd></div>
+          <div><dt>Электричество</dt><dd>{data.communications.electricity ? "Есть" : "Уточняется"}</dd></div>
+          <div><dt>Газ</dt><dd>{data.communications.gas ? "Есть" : "Уточняется"}</dd></div>
+          <div><dt>Вода</dt><dd>{data.communications.water ? "Есть" : "Уточняется"}</dd></div>
+          <div><dt>Подъезд</dt><dd>{data.communications.road ?? "Уточняется"}</dd></div>
+        </dl>
+        {data.features.length > 0 && (
+          <ul class="features">{data.features.map((feature) => <li>{feature}</li>)}</ul>
+        )}
+        <article class="content"><Content /></article>
+      </div>
+      <aside>
+        <div class="request-card">
+          <p class="eyebrow">Записаться на просмотр</p>
+          <h2>Посмотрите участок лично</h2>
+          <p>Позвоним, договоримся о времени и пришлём точку встречи.</p>
+          <ContactForm source={`Карточка участка ${data.id}`} />
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  {data.coordinates && (
+    <section class="section map-section">
+      <div class="container">
+        <p class="eyebrow">Расположение</p>
+        <h2>Участок на карте</h2>
+        <PlotMap
+          plots={[{ id: plot.id, title: data.title, coordinates: data.coordinates, areaSotka: data.areaSotka, status: data.status }]}
+          center={{ ...data.coordinates, zoom: 13 }}
+        />
+      </div>
+    </section>
+  )}
+</Layout>
+
+<style>
+  .container {
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+  }
+
+  .section {
+    padding: 90px 0;
+  }
+
+  .plot-hero {
+    padding: 52px 0 38px;
+    background: var(--paper);
+  }
+
+  .breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 46px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .breadcrumbs a {
+    color: var(--forest);
+    text-decoration: none;
+  }
+
+  .plot-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 40px;
+  }
+
+  h1,
+  h2 {
+    margin: 0;
+    font-family: "Prata", serif;
+    font-weight: 400;
+    line-height: 1.12;
+  }
+
+  h1 {
+    max-width: 800px;
+    margin-top: 16px;
+    font-size: clamp(42px, 6vw, 72px);
+  }
+
+  h2 {
+    font-size: 40px;
+  }
+
+  .plot-heading p {
+    margin: 14px 0 0;
+    color: var(--muted);
+  }
+
+  .status {
+    display: inline-flex;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #e2ece0;
+    color: var(--forest);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .status.reserved {
+    background: #f3e7ce;
+    color: #805718;
+  }
+
+  .status.sold {
+    background: #e6e6e6;
+    color: #5f5f5f;
+  }
+
+  .price {
+    display: grid;
+    min-width: 220px;
+    text-align: right;
+  }
+
+  .price small {
+    color: var(--muted);
+  }
+
+  .price strong {
+    font-family: "Prata", serif;
+    font-size: 30px;
+    font-weight: 400;
+  }
+
+  .gallery-section {
+    padding: 24px 0;
+    background: var(--paper);
+  }
+
+  .gallery {
+    height: 540px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    overflow: hidden;
+    border-radius: 24px;
+  }
+
+  .gallery img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .gallery img:first-child {
+    grid-row: 1 / -1;
+  }
+
+  .gallery-placeholder {
+    position: relative;
+    height: 440px;
+    overflow: hidden;
+    border-radius: 24px;
+  }
+
+  .gallery-placeholder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .gallery-placeholder span {
+    position: absolute;
+    left: 30px;
+    bottom: 30px;
+    padding: 10px 15px;
+    border-radius: 999px;
+    background: rgba(255, 253, 248, 0.9);
+    color: var(--forest);
+    font-weight: 700;
+  }
+
+  .details-grid {
+    display: grid;
+    grid-template-columns: 1.25fr 0.75fr;
+    gap: 80px;
+  }
+
+  .eyebrow {
+    margin: 0 0 14px;
+    color: var(--forest-light);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .specs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 35px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .specs div {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 14px 18px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .specs div:nth-child(odd) {
+    margin-right: 24px;
+  }
+
+  dt {
+    color: var(--muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .features li {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #e4ece1;
+    color: var(--forest);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .content {
+    margin-top: 38px;
+    color: var(--muted);
+  }
+
+  aside {
+    position: relative;
+  }
+
+  .request-card {
+    position: sticky;
+    top: 108px;
+    padding: 30px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: var(--paper);
+    box-shadow: var(--shadow);
+  }
+
+  .request-card h2 {
+    font-size: 30px;
+  }
+
+  .request-card > p:not(.eyebrow) {
+    margin: 12px 0 24px;
+    color: var(--muted);
+  }
+
+  .map-section {
+    background: #e9eee6;
+  }
+
+  .map-section h2 {
+    margin-bottom: 35px;
+  }
+
+  @media (max-width: 800px) {
+    .container {
+      width: min(100% - 28px, 1180px);
+    }
+
+    .plot-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .price {
+      text-align: left;
+    }
+
+    .gallery,
+    .gallery-placeholder {
+      height: 350px;
+    }
+
+    .gallery {
+      grid-template-columns: 1fr;
+    }
+
+    .gallery img:not(:first-child) {
+      display: none;
+    }
+
+    .details-grid {
+      grid-template-columns: 1fr;
+      gap: 50px;
+    }
+
+    .specs {
+      grid-template-columns: 1fr;
+    }
+
+    .specs div:nth-child(odd) {
+      margin-right: 0;
+    }
+  }
+</style>

@@ -1,13 +1,21 @@
 ---
+import { site } from "../data/site";
+
 interface Props {
   title?: string;
   description?: string;
+  image?: string;
 }
 
 const {
-  title = "Земельные участки",
-  description = "Продажа земельных участков — информационный сайт",
+  title = `${site.name} — земельные участки в Тверской области`,
+  description = site.description,
+  image = "/og-cover.svg",
 } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+const imageUrl = new URL(image, Astro.site ?? Astro.url);
+const metrikaId = import.meta.env.PUBLIC_YANDEX_METRIKA_ID;
 ---
 
 <!doctype html>
@@ -16,76 +24,483 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#173f35" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={imageUrl} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href={canonical} />
     <title>{title}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Prata&display=swap"
+      rel="stylesheet"
+    />
+    <slot name="head" />
+    {metrikaId && (
+      <script is:inline define:vars={{ metrikaId }}>
+        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+        (window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
+        ym(metrikaId,"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});
+      </script>
+    )}
   </head>
   <body>
-    <header>
-      <nav>
-        <a href="/">Главная</a>
-        <a href="#plots">Участки</a>
-        <a href="#about">О проекте</a>
-        <a href="#contacts">Контакты</a>
+    {metrikaId && (
+      <noscript><div><img src={`https://mc.yandex.ru/watch/${metrikaId}`} style="position:absolute;left:-9999px" alt="" /></div></noscript>
+    )}
+    <a class="skip-link" href="#main-content">Перейти к содержимому</a>
+    <header class="site-header" data-header>
+      <div class="container header-inner">
+        <a class="brand" href="/" aria-label={`${site.name} — главная`}>
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40">
+              <path d="M7 29 18 9l6 11 4-6 6 15H7Z" fill="currentColor" />
+              <path d="M13 29c4-7 10-8 18-5" fill="none" stroke="#d9a85d" stroke-width="2" />
+            </svg>
+          </span>
+          <span><strong>{site.name}</strong><small>земельные участки</small></span>
+        </a>
+        <nav class="desktop-nav" aria-label="Основная навигация">
+          <a href="/#about">О проекте</a>
+          <a href="/#plots">Участки</a>
+          <a href="/#map">На карте</a>
+          <a href="/#faq">Вопросы</a>
+        </nav>
+        <div class="header-actions">
+          <a class="phone" href={site.phoneHref}>{site.phone}</a>
+          <button class="button button-small button-primary" type="button" data-open-modal>
+            Записаться на просмотр
+          </button>
+          <button class="menu-button" type="button" aria-label="Открыть меню" aria-expanded="false" data-menu-button>
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <nav class="mobile-nav" aria-label="Мобильная навигация" data-mobile-nav>
+        <a href="/#about">О проекте</a>
+        <a href="/#plots">Участки</a>
+        <a href="/#map">На карте</a>
+        <a href="/#faq">Вопросы</a>
+        <a href="/#contacts">Контакты</a>
       </nav>
     </header>
-    <main>
+    <main id="main-content">
       <slot />
     </main>
-    <footer>
-      <p>
-        Сайт носит информационный характер и не является публичной офертой (ст. 437 ГК РФ).
-      </p>
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div>
+          <a class="brand brand-light" href="/">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 40 40"><path d="M7 29 18 9l6 11 4-6 6 15H7Z" fill="currentColor" /></svg>
+            </span>
+            <span><strong>{site.name}</strong><small>земельные участки</small></span>
+          </a>
+          <p>{site.description}</p>
+        </div>
+        <div>
+          <h2>Навигация</h2>
+          <a href="/#about">О проекте</a>
+          <a href="/#plots">Участки</a>
+          <a href="/#map">Карта</a>
+          <a href="/privacy">Политика конфиденциальности</a>
+        </div>
+        <div>
+          <h2>Контакты</h2>
+          <a href={site.phoneHref}>{site.phone}</a>
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+          <span>{site.workHours}</span>
+        </div>
+      </div>
+      <div class="container footer-bottom">
+        <span>© {new Date().getFullYear()} {site.name}</span>
+        <span>{site.legalDisclaimer}</span>
+      </div>
     </footer>
+    <script>
+      const button = document.querySelector("[data-menu-button]");
+      const nav = document.querySelector("[data-mobile-nav]");
+      button?.addEventListener("click", () => {
+        const open = button.getAttribute("aria-expanded") === "true";
+        button.setAttribute("aria-expanded", String(!open));
+        nav?.classList.toggle("is-open", !open);
+      });
+      nav?.querySelectorAll("a").forEach((link) =>
+        link.addEventListener("click", () => {
+          button?.setAttribute("aria-expanded", "false");
+          nav.classList.remove("is-open");
+        }),
+      );
+    </script>
   </body>
 </html>
 
 <style is:global>
   :root {
     color-scheme: light;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    line-height: 1.5;
-    color: #1a1a1a;
-    background: #fafafa;
+    font-family: "Manrope", sans-serif;
+    line-height: 1.6;
+    color: #17342d;
+    background: #f5f3ec;
+    --forest: #173f35;
+    --forest-light: #285c4d;
+    --sage: #a7bda8;
+    --cream: #f5f3ec;
+    --paper: #fffdf8;
+    --gold: #d9a85d;
+    --ink: #17342d;
+    --muted: #5f6f69;
+    --line: #d9ded6;
+    --radius: 22px;
+    --shadow: 0 18px 50px rgba(23, 63, 53, 0.1);
   }
 
   * {
     box-sizing: border-box;
   }
 
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px;
+  }
+
   body {
     margin: 0;
+    min-width: 320px;
+    background: var(--cream);
+    overflow-x: hidden;
   }
 
-  header {
-    background: #fff;
-    border-bottom: 1px solid #e5e5e5;
-    padding: 1rem 1.5rem;
+  body.modal-open {
+    overflow: hidden;
   }
 
-  nav {
+  img {
+    max-width: 100%;
+    display: block;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+  }
+
+  .container {
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+  }
+
+  .skip-link {
+    position: fixed;
+    left: 20px;
+    top: -80px;
+    z-index: 1000;
+    padding: 12px 18px;
+    background: white;
+    color: var(--forest);
+    border-radius: 10px;
+    transition: top 0.2s;
+  }
+
+  .skip-link:focus {
+    top: 12px;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 253, 248, 0.94);
+    border-bottom: 1px solid rgba(23, 63, 53, 0.1);
+    backdrop-filter: blur(16px);
+  }
+
+  .header-inner {
+    min-height: 82px;
     display: flex;
-    gap: 1.5rem;
-    max-width: 1100px;
-    margin: 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
   }
 
-  nav a {
-    color: #2d5016;
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--forest);
     text-decoration: none;
-    font-weight: 500;
   }
 
-  main {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
   }
 
-  footer {
-    border-top: 1px solid #e5e5e5;
-    padding: 1.5rem;
-    text-align: center;
-    font-size: 0.875rem;
-    color: #666;
+  .brand-mark svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .brand strong,
+  .brand small {
+    display: block;
+    line-height: 1.2;
+  }
+
+  .brand strong {
+    font-family: "Prata", serif;
+    font-size: 18px;
+    font-weight: 400;
+  }
+
+  .brand small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .desktop-nav,
+  .header-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  .desktop-nav {
+    gap: 28px;
+  }
+
+  .desktop-nav a {
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+
+  .desktop-nav a:hover {
+    color: var(--forest-light);
+  }
+
+  .header-actions {
+    gap: 16px;
+  }
+
+  .phone {
+    color: var(--forest);
+    text-decoration: none;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .button {
+    min-height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 0 24px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+
+  .button-small {
+    min-height: 44px;
+    padding-inline: 18px;
+    font-size: 13px;
+  }
+
+  .button-primary {
+    background: var(--forest);
+    color: white;
+  }
+
+  .button-primary:hover {
+    background: var(--forest-light);
+    box-shadow: 0 8px 22px rgba(23, 63, 53, 0.18);
+  }
+
+  .button-secondary {
+    border-color: rgba(23, 63, 53, 0.28);
+    background: transparent;
+    color: var(--forest);
+  }
+
+  .button-secondary:hover {
+    background: white;
+    border-color: var(--forest);
+  }
+
+  .menu-button,
+  .mobile-nav {
+    display: none;
+  }
+
+  .site-footer {
+    padding: 72px 0 24px;
+    background: #102f28;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 0.7fr 0.9fr;
+    gap: 60px;
+    padding-bottom: 52px;
+  }
+
+  .footer-grid > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .footer-grid p {
+    max-width: 440px;
+    margin: 14px 0 0;
+  }
+
+  .brand-light {
+    color: white;
+  }
+
+  .brand-light small {
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  .footer-grid h2 {
+    margin: 0 0 8px;
+    color: white;
+    font-family: "Manrope", sans-serif;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .footer-grid a {
+    color: rgba(255, 255, 255, 0.72);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-grid a:hover {
+    color: white;
+  }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 12px;
+  }
+
+  @media (max-width: 1000px) {
+    .desktop-nav,
+    .phone,
+    .header-actions .button {
+      display: none;
+    }
+
+    .menu-button {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-content: center;
+      gap: 5px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .menu-button span {
+      width: 18px;
+      height: 2px;
+      display: block;
+      background: var(--forest);
+    }
+
+    .mobile-nav {
+      display: none;
+      padding: 10px 20px 24px;
+      background: var(--paper);
+      border-top: 1px solid var(--line);
+    }
+
+    .mobile-nav.is-open {
+      display: grid;
+    }
+
+    .mobile-nav a {
+      padding: 13px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 600;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .container {
+      width: min(100% - 28px, 1180px);
+    }
+
+    .header-inner {
+      min-height: 72px;
+    }
+
+    .footer-grid {
+      grid-template-columns: 1fr;
+      gap: 34px;
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 </style>
