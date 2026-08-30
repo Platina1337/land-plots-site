@@ -1,0 +1,61 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="Земельные участки — главная"
+  description="Информационный сайт о продаже земельных участков"
+>
+  <section id="hero">
+    <h1>Земельные участки</h1>
+    <p>
+      Одностраничный информационный сайт для презентации земельных участков.
+      Участки будут добавлены позже — структура данных и план проекта уже готовы.
+    </p>
+    <a href="#plots">Смотреть участки</a>
+  </section>
+
+  <section id="plots">
+    <h2>Участки</h2>
+    <p>Пока нет опубликованных участков. Добавьте файлы в <code>src/content/plots/</code>.</p>
+  </section>
+
+  <section id="about">
+    <h2>О проекте</h2>
+    <p>
+      Подробный план содержимого, данных и этапов разработки — в файле
+      <code>PROJECT_PLAN.md</code>.
+    </p>
+  </section>
+
+  <section id="contacts">
+    <h2>Контакты</h2>
+    <p>Телефон, email и форма заявки будут добавлены на следующем этапе.</p>
+  </section>
+</Layout>
+
+<style>
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  #hero a {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.75rem 1.25rem;
+    background: #2d5016;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+  }
+</style>
